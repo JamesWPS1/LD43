@@ -1,0 +1,286 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Landium : MonoBehaviour {
+
+    public float population = 2500f;
+    public float maxPopulation = 45000f;
+    public float reputation = 50f;
+    public float wealth = 50f;
+    public float food = 250f;
+
+    public float year = 1250f;
+    public float yearTime = 45f;
+
+    public float totalSacrifices;
+
+    public GameObject successfulPurge;
+    public GameObject unsuccessfulPurge;
+    public GameObject deathUI;
+    public GameObject boostFood;
+    public GameObject lowReputation;
+    public GameObject highReputation;
+    public GameObject overpopulated;
+
+    public GameObject goldMineUI;
+    public GameObject plagueUI;
+    public GameObject harvestsPoorUI;
+    public GameObject harvestsGoodUI;
+    public GameObject rebellionUI;
+    public GameObject migrationUI;
+
+    public GameObject bankruptUI;
+    public GameObject starvingUI;
+
+    public float populationMultiplier = 450f;
+    public float oldWealthMultiplier;
+
+    public float reputationFallTimer = 2.5f;
+
+    public float reputationTimer = 25f;
+    public float foodMultiplier = 1.25f;
+    public float wealthMultiplier = 20;
+    public float populationTimer = 15f;
+    public float foodTimer = 10f;
+    public float wealthTimer = 30f;
+
+    public float reputationMultiplier = 1f;
+    public bool isRebellionActive = false;
+
+    public Text populationText;
+    public Text yearText;
+    public Text maxPopulationText;
+    public Text reputationText;
+    public Text wealthText;
+    public Text foodText;
+
+    public Transform goldMine;
+    public Transform[] mineLocations = new Transform[4];
+    public Transform[] towns = new Transform[4];
+
+    public float randomEventTimer = 100f;
+    List<string> events = new List<string>();
+    public int randomEvent;
+
+	// Use this for initialization
+	void Start () {
+        events.Add("Gold Mine");
+        events.Add("Plague");
+        events.Add("Harvest down");
+        events.Add("Harvest up");
+        events.Add("Rebellion");
+        events.Add("Migration");
+
+	}
+	
+	// Update is called once per frame
+	void Update () {
+        reputationFallTimer -= Time.deltaTime;
+        if (population > maxPopulation)
+		{
+			if (reputationFallTimer <= 0)
+			{
+				food = food - 10f;
+				wealth = wealth - 5f;
+				reputation = reputation - 2f;
+				reputationTimer = 1f;
+			}
+		}
+
+
+
+		yearTime -= Time.deltaTime;
+        if(yearTime <= 0){
+            yearTime = 45f;
+            year = year + 1;
+        }
+
+        randomEventTimer -= Time.deltaTime;
+        if (randomEventTimer <= 0){
+            randomEvent = Random.Range(0, 6);
+            randomEventTimer = 15f;
+            print(randomEvent);
+            if(randomEvent == 0){
+                print("Gold Mine Found!");
+
+                //Add wealth and wealth multiplier and reputation
+
+                goldMineUI.SetActive(true);
+
+                wealth = wealth + 25;
+                wealthTimer = wealthTimer - 0.25f;
+                wealthMultiplier = wealthMultiplier + 3f;
+                reputation = reputation + 10f;
+
+                int whichMine = Random.Range(0, 3);
+                Instantiate(goldMine, mineLocations[whichMine].position, Quaternion.identity);
+
+            } else if(randomEvent == 1){
+                print("Plague happens!");
+
+                //Reduce population and reputation
+
+                plagueUI.SetActive(true);
+
+                population = population - 300;
+                reputation = reputation - 10f;
+                wealth = wealth - 20;
+
+            } else if(randomEvent == 2){
+                print("Harvests down");
+                harvestsPoorUI.SetActive(true);
+                //Reduce food and reputation
+
+                food = food - 50;
+                foodMultiplier = foodMultiplier - 0.5f;
+                reputation = reputation - 20;
+
+            } else if(randomEvent == 3){
+                print("Harvests up");
+                harvestsGoodUI.SetActive(true);
+                //Increase food and reputation
+                food = food + 20;
+                foodMultiplier = foodMultiplier + 0.5f;
+                reputation = reputation + 10f;
+            } else if (randomEvent == 4 && reputation <= 50f){
+                print("REBELLION!");
+                isRebellionActive = true;
+                rebellionUI.SetActive(true);
+                int randomTown = Random.Range(0, 3);
+                Transform rebelliousTown = towns[randomTown];
+                print("Rebellion at town " + rebelliousTown.name);
+
+            } else if(randomEvent == 5){
+                print("Migration");
+                //Add more population
+                migrationUI.SetActive(true);
+                population = population + (Random.Range(1000, 7000));
+                food = food - 20;
+                reputation = reputation - 2;
+
+
+            }
+
+        }
+
+        populationText.text = "Population: " + Mathf.Round(population).ToString();
+        yearText.text = year.ToString();
+		maxPopulationText.text = "Max Population: " + maxPopulation.ToString();
+		reputationText.text = "Reputation: " + reputation.ToString();
+		wealthText.text = "Wealth: " + wealth.ToString();
+		foodText.text = "Food: " + food.ToString();
+
+        populationTimer -= Time.deltaTime;
+        reputationTimer -= Time.deltaTime;
+        foodTimer -= Time.deltaTime;
+        wealthTimer -= Time.deltaTime;
+        if(populationTimer <= 0){
+            population = population + populationMultiplier;
+            foodMultiplier = foodMultiplier + 0.25f;
+            wealthMultiplier = wealthMultiplier + 1.25f;
+            populationTimer = 15f;
+            populationMultiplier = populationMultiplier + 150f;
+		}
+        if (foodTimer <= 0){
+            food = food - foodMultiplier;
+            foodTimer = 10f;
+        }
+
+        if (wealthTimer <= 0){
+            wealth = wealth + wealthMultiplier;
+            wealthTimer = 30f;
+        }
+
+        if(reputationTimer <= 0){
+            reputation = reputation + reputationMultiplier;
+            reputationTimer = 25f;
+        }
+
+
+        if(wealth <= 0){
+            print("Bankrupt!");
+            reputationFallTimer -= Time.deltaTime;
+            if(reputationFallTimer <= 0){
+               reputation = reputation - 1;
+                reputationFallTimer = 2.5f;
+            }
+
+        }
+
+        if (food <= 0){
+            print("Starving!");
+            reputationFallTimer -= Time.deltaTime;
+            if(reputationFallTimer <= 0){
+                reputation = reputation - 1;
+                reputationFallTimer = 2.5f;
+            }
+        }
+
+
+        if (reputation <= 0f){
+            if(Time.timeScale == 1){
+                Time.timeScale = 0;
+                print("Game Over");
+                deathUI.SetActive(true);
+            }
+        }
+
+	}
+
+    public void Sacrifice(){
+        print("Time to kill!");
+        if(reputation >= 50){
+            float diceNumber = Random.Range(0,6);
+            if (diceNumber < 4){
+                print("Population halved and the people aren't suspicious");
+                successfulPurge.SetActive(true);
+                population = population - 200;
+                totalSacrifices = totalSacrifices + 200;
+                wealth = wealth - 20;
+                food = food + 30;
+            } else if (diceNumber > 4){
+                print("Population has been sacrificed but the people caught you");
+                unsuccessfulPurge.SetActive(true);
+                reputation = reputation - 20;
+                wealth = wealth - 20;
+                food = food + 30;
+                population = population - 200;
+                totalSacrifices = totalSacrifices + 200;
+            }
+        } else if(reputation < 50){
+			float diceNumber = Random.Range(0, 6);
+            if (diceNumber > 4 && wealth > 20f)
+			{
+				print("Population halved and the people aren't suspicious");
+                successfulPurge.SetActive(true);
+				population = population - 200;
+                totalSacrifices = totalSacrifices + 200;
+				food = food + 30;
+                wealth = wealth - 20;
+			}
+			else if (diceNumber < 4)
+			{
+				print("Population has been sacrificed but the people caught you");
+                unsuccessfulPurge.SetActive(true);
+				reputation = reputation - 20;
+                wealth = wealth - 20;
+				food = food + 30;
+				population = population - 200;
+                totalSacrifices = totalSacrifices + 200;
+			}
+        }
+    }
+
+    public void BoostFood(){
+        print("Food boosted!");
+        boostFood.SetActive(true);
+        //Reduce wealth and food
+
+        food = food + Random.Range(15, 60);
+        wealth = wealth - Random.Range(10, 30);
+        reputation = reputation + 15;
+
+    }
+}
